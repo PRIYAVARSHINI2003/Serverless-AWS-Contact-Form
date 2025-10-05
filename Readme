@@ -1,27 +1,11 @@
 
 
-# 🚀 Serverless Contact Form (S3 → API Gateway → Lambda → SNS)
-
-## Project Overview
-
 This is a modern, fully **serverless** solution for a website contact form. It handles form submissions reliably, provides automatic email notifications, and operates on a **pay-per-use model** with zero server maintenance overhead. The entire architecture is highly scalable and deployed on **Amazon Web Services (AWS)**.
 
-## Architecture Diagram
-
-The project uses four core AWS services connected in a workflow:
-
+## Workflow:
+User Form (S3)->`HTTP POST`-> `API Gateway`->`Code Execution (Lambda)` ->`Email Notification (SNS)`
 
 
-**Workflow:** `User Form (S3)` $\rightarrow$ `HTTP POST` $\rightarrow$ `API Gateway` $\rightarrow$ `Code Execution (Lambda)` $\rightarrow$ `Email Notification (SNS)`
-
-## Component Breakdown
-
-| Component | AWS Service | Purpose in the Project | Files Involved |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | **Amazon S3** | Hosts the static website files (`index.html`), serving the contact form to users globally. | `index.html` |
-| **Entry Point** | **API Gateway** | Acts as the public **REST endpoint** that receives the form data. It manages **CORS** security and routes the request to the Lambda function using **Proxy Integration**. | N/A (Configuration only) |
-| **Backend Logic** | **AWS Lambda** | Executes the Python code (`lambda_function.py`). It parses the incoming JSON data and publishes the message to the SNS Topic. | `lambda_function.py` |
-| **Notification** | **Amazon SNS** | The Simple Notification Service reliably sends the collected form data as an **email notification** to the subscribed administrator(s). | N/A (Configuration only) |
 
 ## Key Features
 
@@ -30,7 +14,6 @@ The project uses four core AWS services connected in a workflow:
 * **High Scalability:** Built to handle any volume of traffic automatically, from a few submissions to thousands of submissions per second.
 * **Robust Error Handling:** The JavaScript includes client-side safeguards to reliably report HTTP and JSON parsing errors back to the user.
 
-***
 
 ## Deployment Instructions
 
