@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Contact Form Demo (Corrected)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        #responseMessage {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Contact Our Serverless Bot 🤖</h1>
+    <p>This form uses AWS S3, API Gateway, Lambda, and SNS. No servers required!</p>
+
+    <form id="contactForm">
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="email">Your Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="message">Your Message:</label>
+        <textarea id="message" name="message" required></textarea>
+
+        <button type="submit" id="submitButton">Send Message</button>
+        <p id="responseMessage"></p>
+    </form>
+</div>
+
+<script>
+    // ⚠️ IMPORTANT: Replace this placeholder with your actual API Gateway Invoke URL
+    // Example: 'https://xxxxxxxxx.execute-api.ap-southeast-2.amazonaws.com/prod/contact'
+    const API_ENDPOINT = 'https://sezyolarmk.execute-api.ap-southeast-2.amazonaws.com/prod/contact';
+
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Stop default HTML form submission
+
+        const form = e.target;
+        const messageElement = document.getElementById('responseMessage');
+        const submitButton = document.getElementById('submitButton');
+        
+        // Disable button and show sending status
+        submitButton.disabled = true;
+        messageElement.textContent = 'Sending...';
+        messageElement.className = '';
+
+        // Collect form data
+        const data = {
+            name: form.name.value,
+            email: form.email.value,
+            message: form.message.value
+        };
+
+        // --- Core Fetch and Robust Error Handling ---
+        fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            // Check for HTTP errors (e.g., 403, 500)
+            if (!response.ok) {
+                // If it's a non-200 response, try to read the JSON error body
+                return response.json().catch(() => {
+                    // If the error body isn't JSON, throw a custom error
+                    throw new Error(`HTTP Error: ${response.status} - Server returned an unreadable response.`);
+                });
+            }
+            // If HTTP status is good (200), parse the JSON body
+            return response.json();
+        })
+        .then(result => {
+            // SAFEGUARD: Check if the result and the required 'message' property exist
+            if (result && typeof result.message === 'string') { 
+                messageElement.textContent = result.message;
+                
+                // Now safely use .includes()
+                if (result.message.includes('Thank you')) { 
+                    messageElement.className = 'success';
+                    form.reset(); // Clear form on success
+                } else {
+                    messageElement.className = 'error';
+                }
+            } else {
+                // Handle unexpected or missing message structure
+                messageElement.textContent = 'Submission failed: Unexpected server response format.';
+                messageElement.className = 'error';
+                console.error("API returned invalid JSON structure:", result);
+            }
+        })
+        .catch(error => {
+            // This catches network issues or errors thrown in the .then blocks
+            messageElement.textContent = error.message || 'A critical network error occurred.';
+            messageElement.className = 'error';
+            console.error('Fetch/Processing Error:', error);
+        })
+        .finally(() => {
+            submitButton.disabled = false; // Re-enable button
+        });
+        // --- End of Fetch Block ---
+    });
+</script>
+
+</body>
+</html>
